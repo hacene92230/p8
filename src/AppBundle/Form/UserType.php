@@ -17,6 +17,17 @@ use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 
 class UserType extends AbstractType
 {
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefaults([
+            'data_class' => User::class,
+            'roles' => [
+                'User' => 'ROLE_USER',
+                'Administrateur' => 'ROLE_ADMIN',
+            ]
+        ]);
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
@@ -24,10 +35,7 @@ class UserType extends AbstractType
                 'required' => true,
                 'multiple' => false,
                 'expanded' => false,
-                'choices'  => [
-                    'User' => 'ROLE_USER',
-                    'Administrateur' => 'ROLE_ADMIN',
-                ]
+                'choices'  => $options['roles']
             ])
 
             ->add('username', TextType::class, ['label' => "Nom d'utilisateur"])
@@ -52,12 +60,5 @@ class UserType extends AbstractType
                     return [$rolesString];
                 }
             ));
-    }
-
-    public function configureOptions(OptionsResolver $resolver)
-    {
-        $resolver->setDefaults([
-            'data_class' => User::class,
-        ]);
     }
 }

@@ -83,14 +83,23 @@ class User implements UserInterface
         $this->email = $email;
     }
 
+    /**
+     * @see UserInterface
+     */
     public function getRoles()
     {
-        return array('ROLE_USER');
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER';
+        return array_unique($roles);
     }
-    public function setRoles($roles)
+
+    public function setRoles(array $roles)
     {
         $this->roles = $roles;
+
+        return $this;
     }
+
 
     public function eraseCredentials()
     {
