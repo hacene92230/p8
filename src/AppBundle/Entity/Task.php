@@ -2,6 +2,8 @@
 
 namespace AppBundle\Entity;
 
+use Datetime;
+use Assert\NotNull;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -40,9 +42,16 @@ class Task
      */
     private $isDone;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="User", inversedBy="tasks")
+     * @ORM\JoinColumn(name="user_id", referencedColumnName="id")
+     * @NotNull
+     */
+    private $user;
+
     public function __construct()
     {
-        $this->createdAt = new \Datetime();
+        $this->createdAt = new Datetime();
         $this->isDone = false;
     }
 
@@ -89,5 +98,25 @@ class Task
     public function toggle($flag)
     {
         $this->isDone = $flag;
+    }
+
+    /**
+     * Get the value of user
+     */
+    public function getUser()
+    {
+        return $this->user;
+    }
+
+    /**
+     * Set the value of user
+     *
+     * @return  self
+     */
+    public function setUser($user)
+    {
+        $this->user = $user;
+
+        return $this;
     }
 }

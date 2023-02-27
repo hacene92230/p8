@@ -24,6 +24,7 @@ class TaskController extends Controller
     public function createAction(Request $request)
     {
         $task = new Task();
+        $task->setUser($this->getUser());
         $form = $this->createForm(TaskType::class, $task);
 
         $form->handleRequest($request);
@@ -34,7 +35,7 @@ class TaskController extends Controller
             $em->persist($task);
             $em->flush();
 
-            $this->addFlash('success', 'La tâche a été bien été ajoutée.');
+            $this->addFlash('success', 'La tâche a bien été ajoutée.');
 
             return $this->redirectToRoute('task_list');
         }
