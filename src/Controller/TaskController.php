@@ -37,23 +37,13 @@ class TaskController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $task->setUser($this->getUser());
             $taskRepository->add($task, true);
-
+            $this->addFlash('success', 'Tâche Correctement créer.');
             return $this->redirectToRoute('app_test', [], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('task/create.html.twig', [
             'task' => $task,
             'form' => $form,
-        ]);
-    }
-
-    /**
-     * @Route("/{id}", name="task_show", methods={"GET"})
-     */
-    public function show(Task $task): Response
-    {
-        return $this->render('task/create.html.twig', [
-            'task' => $task,
         ]);
     }
 
@@ -67,7 +57,7 @@ class TaskController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $taskRepository->add($task, true);
-
+            $this->addFlash('success', 'Tâche correctement mis à jour.');
             return $this->redirectToRoute('app_test', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -82,10 +72,14 @@ class TaskController extends AbstractController
      */
     public function delete(Request $request, Task $task, TaskRepository $taskRepository): Response
     {
+        if ($this->getUser() != $task->getUser()) {
+            $this->addFlash('error', 'Impossible de supprimer une tâche que vous n\'avez pas créer.');
+            return $this->redirectToRoute('app_test', [], Response::HTTP_SEE_OTHER);
+        }
         if ($this->isCsrfTokenValid('delete' . $task->getId(), $request->request->get('_token'))) {
             $taskRepository->remove($task, true);
         }
-
+        $this->addFlash('success', 'La tâche a bien été supprimée.');
         return $this->redirectToRoute('task_list', [], Response::HTTP_SEE_OTHER);
     }
 
