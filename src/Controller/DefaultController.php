@@ -10,7 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class DefaultController extends AbstractController
 {
     /**
-     * @Route("/test", name="app_test")
+     * @Route("/home", name="app_test")
      */
     public function index(TaskRepository $taskRepository): Response
     {

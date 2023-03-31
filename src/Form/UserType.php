@@ -16,27 +16,32 @@ class UserType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->add(
-            'roles',
-            ChoiceType::class,
-            [
-                'label' => 'Roles de l\'utilisateur',
-                'choices' => ['ROLE_ADMIN' => 'ROLE_ADMIN', 'ROLE_USER' => 'ROLE_USER'],
-                'required' => true,
-                'multiple' => true,
-                'expanded' => true,
-            ]
-        )
-        
-            ->add('username', TextType::class, ['label' => "Nom d'utilisateur"])
+        $user = $options['data'];
+        $builder
+            ->add(
+                'roles',
+                ChoiceType::class,
+                [
+                    'label' => 'Roles de l\'utilisateur',
+                    'choices' => ['ROLE_ADMIN' => 'ROLE_ADMIN', 'ROLE_USER' => 'ROLE_USER'],
+                    'required' => true,
+                    'multiple' => true,
+                    'expanded' => true,
+                ]
+            )
 
-            ->add('plainPassword', RepeatedType::class, [
+            ->add('username', TextType::class, ['label' => "Nom d'utilisateur"]);
+
+        if (!$user->getId()) {
+            $builder->add('plainPassword', RepeatedType::class, [
                 'mapped' => false,
                 'type' => PasswordType::class,
                 'first_options' => ['label' => 'Mot de passe'],
                 'second_options' => ['label' => 'Confirmez le mot de passe'],
-            ])
+            ]);
+        }
 
+        $builder
             ->add('email', EmailType::class, ['label' => 'Adresse email']);
     }
 
