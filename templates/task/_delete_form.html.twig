@@ -1,5 +1,5 @@
 <form method="post" action="{{ path('task_delete', {'id': task.id}) }}" onsubmit="return confirm('Êtes-vous sûr de bien vouloir supprimer cette tâche?');">
     <input type="hidden" name="_method" value="DELETE">
     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ task.id) }}">
-    <button class="btn">Delete</button>
+    <button class="btn">Supprimer</button>
 </form>
