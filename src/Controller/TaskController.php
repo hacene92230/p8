@@ -30,11 +30,13 @@ class TaskController extends AbstractController
      */
     public function new(Request $request, TaskRepository $taskRepository): Response
     {
+        var_dump($this->getUser());
         $task = new Task();
         $form = $this->createForm(TaskType::class, $task);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $task->setUser($this->getUser());
             $taskRepository->add($task, true);
 
             return $this->redirectToRoute('test', [], Response::HTTP_SEE_OTHER);
