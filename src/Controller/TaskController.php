@@ -78,7 +78,7 @@ class TaskController extends AbstractController
     }
 
     /**
-     * @Route("/{id}", name="task_delete", methods={"POST"})
+     * @Route("/delete/{id}", name="task_delete", methods={"POST", "GET"})
      */
     public function delete(Request $request, Task $task, TaskRepository $taskRepository): Response
     {

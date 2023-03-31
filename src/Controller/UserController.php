@@ -21,7 +21,7 @@ use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
 class UserController extends AbstractController
 {
     /**
-     * @Route("/", name="app_user_index", methods={"GET"})
+     * @Route("/", name="user_list", methods={"GET"})
      */
     public function index(UserRepository $userRepository): Response
     {
@@ -33,7 +33,7 @@ class UserController extends AbstractController
     /**
      * @Route("/register", name="user_create")
      */
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, UserAuthenticatorInterface $userAuthenticator, UserAuthenticator $authenticator, EntityManagerInterface $entityManager): Response
+    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
     {
         $user = new User();
         $form = $this->createForm(UserType::class, $user);
@@ -52,11 +52,7 @@ class UserController extends AbstractController
             $entityManager->flush();
             // do anything else you need here, like send an email
 
-            return $userAuthenticator->authenticateUser(
-                $user,
-                $authenticator,
-                $request
-            );
+            return $this->redirectToRoute('app_test');
         }
 
         return $this->render('user/create.html.twig', [

@@ -5,7 +5,11 @@
 {% endblock %}
 
 {% block body %}
-
+    <div class="row">
+   {% if app.user is not empty and app.user.roles[0] == "ROLE_ADMIN" %}
+    <a href="{{ path('user_list') }}" class="btn btn-success">Gestion utilisateur</a>
+{% endif %}
+</div>
     <div class="row">
     {% if app.user %}
         <a href="{{ path('task_create') }}" class="btn btn-success">Créer une nouvelle tâche</a>
@@ -30,15 +34,15 @@
                             {% if not task.isDone %}Marquer comme faite{% else %}Marquer non terminée{% endif %}
                         </button>
                     </form>
-                    <form action="{{ path('task_delete', {'id' : task.id }) }}">
-                        <button class="btn btn-danger btn-sm pull-right">Supprimer</button>
-                    </form>
+                    {% if task.user.id == app.user.id %}
+                    {{ include('task/_delete_form.html.twig') }}
+                {% endif %}
                 </div>
             </div>
         </div>
         {% else %}
             <div class="alert alert-warning" role="alert">
-                Il n'y a pas encore de tâche à faire. <a href="{{ path('task_list') }}" class="btn btn-warning pull-right">Consulter les tâches déjà réaliser</a>
+                Il n'y a pas encore de tâche à faire.
             </div>
         {% endfor %}
     </div>
