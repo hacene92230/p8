@@ -30,7 +30,6 @@ class TaskController extends AbstractController
      */
     public function new(Request $request, TaskRepository $taskRepository): Response
     {
-        var_dump($this->getUser());
         $task = new Task();
         $form = $this->createForm(TaskType::class, $task);
         $form->handleRequest($request);
@@ -39,7 +38,7 @@ class TaskController extends AbstractController
             $task->setUser($this->getUser());
             $taskRepository->add($task, true);
 
-            return $this->redirectToRoute('test', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_test', [], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('task/create.html.twig', [
@@ -53,7 +52,7 @@ class TaskController extends AbstractController
      */
     public function show(Task $task): Response
     {
-        return $this->render('task/show.html.twig', [
+        return $this->render('task/create.html.twig', [
             'task' => $task,
         ]);
     }
@@ -69,7 +68,7 @@ class TaskController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $taskRepository->add($task, true);
 
-            return $this->redirectToRoute('task_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_test', [], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('task/edit.html.twig', [
@@ -87,7 +86,7 @@ class TaskController extends AbstractController
             $taskRepository->remove($task, true);
         }
 
-        return $this->redirectToRoute('task_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('task_list', [], Response::HTTP_SEE_OTHER);
     }
 
     /**
