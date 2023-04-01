@@ -5,10 +5,11 @@ namespace App\Controller;
 use App\Entity\Task;
 use App\Form\TaskType;
 use App\Repository\TaskRepository;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 /**
  * @Route("/task")
@@ -18,10 +19,21 @@ class TaskController extends AbstractController
     /**
      * @Route("/", name="task_list", methods={"GET"})
      */
-    public function index(TaskRepository $taskRepository): Response
+    public function index(TaskRepository $taskRepository, PaginatorInterface $paginator, Request $request): Response
     {
+        $queryBuilder = $taskRepository->createQueryBuilder('t')
+            ->where('t.isDone = :isDone')
+            ->setParameter('isDone', true)
+            ->orderBy('t.id', 'DESC'); // ordre par défaut des résultats
+
+        $pagination = $paginator->paginate(
+            $queryBuilder, // requête à paginer
+            $request->query->getInt('page', 1), // numéro de la page
+            6 // nombre d'éléments par page
+        );
+
         return $this->render('task/list.html.twig', [
-            'tasks' => $taskRepository->findBy(["isDone" => true]),
+            'pagination' => $pagination,
         ]);
     }
 

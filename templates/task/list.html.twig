@@ -4,31 +4,34 @@
 
 {% block body %}
     <a href="{{ path('task_create') }}" class="btn btn-info pull-right">Créer une tâche</a>
-    <div class="row">
-        {% for task in tasks %}
-        <div class="col-sm-4 col-lg-4 col-md-4">
-            <div class="thumbnail">
-                <div class="caption">
-                    <h4 class="pull-right">
-                        {% if task.isDone %}<span class="glyphicon glyphicon-ok"></span>{% else %}<span class="glyphicon glyphicon-remove"></span>{% endif %}
-                    </h4>
-                    <h4><a href="{{ path('task_edit', {'id' : task.id }) }}">{{ task.title }}</a></h4>
-                    <p>contenu:{{ task.content }}</p>
-                <p>Créer par: {{ task.user.userName }}</p>
-                <p>Date de création: {{ task.createdAt|date('d/m/Y') }} </p>
-                </div>
-                <div>
-                    <form action="{{ path('task_toggle', {'id' : task.id }) }}">
-                        <button class="btn btn-success btn-sm pull-right">
-                            {% if not task.isDone %}Marquer comme faite{% else %}Marquer non terminée{% endif %}
-                        </button>
-                    </form>
-                                       {% if task.user is not null and app.user is not null and app.user.id == task.user.id %}
-                        {{ include('task/_delete_form.html.twig') }}
+    <h2>Tâche réaliser</h2>
+<div class="row">
+    {% for task in pagination %}
+    <div class="col-sm-4 col-lg-4 col-md-4">
+        <div class="thumbnail">
+            <div class="caption">
+                <h4 class="pull-right">
+                    {% if task.isDone %}<span class="glyphicon glyphicon-ok"></span>{% else %}<span class="glyphicon glyphicon-remove"></span>{% endif %}
+                </h4>
+                <h4><a href="{{ path('task_edit', {'id' : task.id }) }}">{{ task.title }}</a></h4>
+                <p>{{ task.content }}</p>
+            </div>
+            <div>
+                <form action="{{ path('task_toggle', {'id' : task.id }) }}">
+                    <button class="btn btn-success btn-sm pull-right">
+                        {% if not task.isDone %}Marquer comme faite{% else %}Marquer non terminée{% endif %}
+                    </button>
+                </form>
+                {% if task.user is not null and app.user is not null and app.user.id == task.user.id %}
+                {{ include('task/_delete_form.html.twig') }}
                 {% endif %}
-                </div>
             </div>
         </div>
+    </div>
+
+<div class="pagination">
+{{ knp_pagination_render(pagination) }}
+</div>
         {% else %}
             <div class="alert alert-warning" role="alert">
                 Il y a aucune tâche réaliser.
