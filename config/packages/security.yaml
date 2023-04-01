@@ -33,6 +33,7 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
          - { path: ^/user/register, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+         - { path: ^/task/new, roles: ROLE_USER }
          - { path: ^/user, roles: ROLE_ADMIN }
 
     role_hierarchy:
