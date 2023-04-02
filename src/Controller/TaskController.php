@@ -96,7 +96,7 @@ class TaskController extends AbstractController
     }
 
     /**
-     * @Route("/tasks/{id}/toggle", name="task_toggle")
+     * @Route("/{id}/toggle", name="task_toggle")
      */
     public function toggleTaskAction(TaskRepository $taskRepository, Task $task)
     {

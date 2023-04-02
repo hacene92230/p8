@@ -1,129 +1,85 @@
 <?php
 
-namespace App\Test\Controller;
+namespace App\Tests\Controller;
 
-use App\Entity\User;
-use App\Repository\UserRepository;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+
 
 class UserControllerTest extends WebTestCase
 {
-    private KernelBrowser $client;
-    private UserRepository $repository;
-    private string $path = '/user/';
 
-    protected function setUp(): void
+    private $client;
+
+    public function setUp(): void
     {
         $this->client = static::createClient();
-        $this->repository = (static::getContainer()->get('doctrine'))->getRepository(User::class);
-
-        foreach ($this->repository->findAll() as $object) {
-            $this->repository->remove($object, true);
-        }
     }
 
-    public function testIndex(): void
+    public function loginUser(): void
     {
-        $crawler = $this->client->request('GET', $this->path);
-
-        self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('User index');
-
-        // Use the $crawler to perform additional assertions e.g.
-        // self::assertSame('Some text on the page', $crawler->filter('.p')->first());
+        $crawler = $this->client->request('GET', '/login');
+        $form = $crawler->selectButton('Connexion')->form();
+        $this->client->submit($form, ['username' => 'user0', 'password' => 'password']);
     }
 
-    public function testNew(): void
+    public function testListAction()
     {
-        $originalNumObjectsInRepository = count($this->repository->findAll());
-
-        $this->markTestIncomplete();
-        $this->client->request('GET', sprintf('%snew', $this->path));
-
-        self::assertResponseStatusCodeSame(200);
-
-        $this->client->submitForm('Save', [
-            'user[username]' => 'Testing',
-            'user[roles]' => 'Testing',
-            'user[password]' => 'Testing',
-            'user[email]' => 'Testing',
-        ]);
-
-        self::assertResponseRedirects('/user/');
-
-        self::assertSame($originalNumObjectsInRepository + 1, count($this->repository->findAll()));
+        $this->loginUser();
+        $this->client->request('GET', '/user');
+        $this->assertEquals(301, $this->client->getResponse()->getStatusCode());
     }
 
-    public function testShow(): void
+    public function testCreateAction()
     {
-        $this->markTestIncomplete();
-        $fixture = new User();
-        $fixture->setUsername('My Title');
-        $fixture->setRoles('My Title');
-        $fixture->setPassword('My Title');
-        $fixture->setEmail('My Title');
+        $this->loginUser();
 
-        $this->repository->add($fixture, true);
+        $crawler = $this->client->request('GET', '/user/register');
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
+        $form = $crawler->selectButton('Ajouter')->form();
+        $form['user[username]'] = 'autre';
+        $form['user[password][first]'] = 'autre';
+        $form['user[password][second]'] = 'autre';
+        $form['user[email]'] = 'autre@autre.org';
+        $form['user[roles][0]']->tick();
+        $this->client->submit($form);
 
-        self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('User');
+        $this->assertEquals(302, $this->client->getResponse()->getStatusCode());
 
-        // Use assertions to check that the properties are properly displayed.
+        $crawler = $this->client->followRedirect();
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(1, $crawler->filter('div.alert-success')->count());
     }
 
-    public function testEdit(): void
+    public function testUpdateAction()
     {
-        $this->markTestIncomplete();
-        $fixture = new User();
-        $fixture->setUsername('My Title');
-        $fixture->setRoles('My Title');
-        $fixture->setPassword('My Title');
-        $fixture->setEmail('My Title');
+        $this->loginUser();
 
-        $this->repository->add($fixture, true);
+        $crawler = $this->client->request('GET', '/user/134/edit');
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('GET', sprintf('%s%s/edit', $this->path, $fixture->getId()));
+        // Sélectionner le bouton de modification dans la page
+        $buttonCrawlerNode = $crawler->selectButton('Modifier');
 
-        $this->client->submitForm('Update', [
-            'user[username]' => 'Something New',
-            'user[roles]' => 'Something New',
-            'user[password]' => 'Something New',
-            'user[email]' => 'Something New',
-        ]);
+        // Récupérer le formulaire lié au bouton de modification
+        $form = $buttonCrawlerNode->form();
 
-        self::assertResponseRedirects('/user/');
+        // Remplir les champs du formulaire avec les nouvelles données
+        $form['user[username]'] = 'nouveau';
+        $form['user[plainPassword][first]'] = 'nouveau';
+        $form['user[plainPassword][second]'] = 'nouveau';
+        $form['user[email]'] = 'nouveau@nouveau.org';
+        $form['user[roles][0]']->tick();
 
-        $fixture = $this->repository->findAll();
+        // Soumettre le formulaire
+        $this->client->submit($form);
 
-        self::assertSame('Something New', $fixture[0]->getUsername());
-        self::assertSame('Something New', $fixture[0]->getRoles());
-        self::assertSame('Something New', $fixture[0]->getPassword());
-        self::assertSame('Something New', $fixture[0]->getEmail());
-    }
+        $this->assertEquals(303, $this->client->getResponse()->getStatusCode());
 
-    public function testRemove(): void
-    {
-        $this->markTestIncomplete();
+        $crawler = $this->client->followRedirect();
 
-        $originalNumObjectsInRepository = count($this->repository->findAll());
-
-        $fixture = new User();
-        $fixture->setUsername('My Title');
-        $fixture->setRoles('My Title');
-        $fixture->setPassword('My Title');
-        $fixture->setEmail('My Title');
-
-        $this->repository->add($fixture, true);
-
-        self::assertSame($originalNumObjectsInRepository + 1, count($this->repository->findAll()));
-
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
-        $this->client->submitForm('Delete');
-
-        self::assertSame($originalNumObjectsInRepository, count($this->repository->findAll()));
-        self::assertResponseRedirects('/user/');
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(0, $crawler->filter('div.alert-success')->count());
     }
 }

@@ -32,15 +32,13 @@ class UserType extends AbstractType
 
             ->add('username', TextType::class, ['label' => "Nom d'utilisateur"]);
 
-        if (!$user->getId()) {
             $builder->add('plainPassword', RepeatedType::class, [
                 'mapped' => false,
                 'type' => PasswordType::class,
                 'first_options' => ['label' => 'Mot de passe'],
                 'second_options' => ['label' => 'Confirmez le mot de passe'],
             ]);
-        }
-
+        
         $builder
             ->add('email', EmailType::class, ['label' => 'Adresse email']);
     }

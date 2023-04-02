@@ -1,129 +1,97 @@
 <?php
 
-namespace App\Test\Controller;
 
-use App\Entity\Task;
-use App\Repository\TaskRepository;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+namespace App\Tests\Controller;
+
+
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class TaskControllerTest extends WebTestCase
 {
-    private KernelBrowser $client;
-    private TaskRepository $repository;
-    private string $path = '/task/';
+    private $client;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         $this->client = static::createClient();
-        $this->repository = (static::getContainer()->get('doctrine'))->getRepository(Task::class);
-
-        foreach ($this->repository->findAll() as $object) {
-            $this->repository->remove($object, true);
-        }
     }
 
-    public function testIndex(): void
+    public function loginUser(): void
     {
-        $crawler = $this->client->request('GET', $this->path);
-
-        self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('Task index');
-
-        // Use the $crawler to perform additional assertions e.g.
-        // self::assertSame('Some text on the page', $crawler->filter('.p')->first());
+        $crawler = $this->client->request('GET', '/login');
+        $form = $crawler->selectButton('Connexion')->form();
+        $this->client->submit($form, ['username' => 'admin', 'password' => 'adminadmin']);
     }
 
-    public function testNew(): void
+    public function testListAction()
     {
-        $originalNumObjectsInRepository = count($this->repository->findAll());
-
-        $this->markTestIncomplete();
-        $this->client->request('GET', sprintf('%snew', $this->path));
-
-        self::assertResponseStatusCodeSame(200);
-
-        $this->client->submitForm('Save', [
-            'task[createdAt]' => 'Testing',
-            'task[title]' => 'Testing',
-            'task[content]' => 'Testing',
-            'task[isDone]' => 'Testing',
-        ]);
-
-        self::assertResponseRedirects('/task/');
-
-        self::assertSame($originalNumObjectsInRepository + 1, count($this->repository->findAll()));
+        $this->client->request('GET', '/task/');
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
     }
 
-    public function testShow(): void
+    public function testCreateAction()
     {
-        $this->markTestIncomplete();
-        $fixture = new Task();
-        $fixture->setCreatedAt('My Title');
-        $fixture->setTitle('My Title');
-        $fixture->setContent('My Title');
-        $fixture->setIsDone('My Title');
+        $this->loginUser();
+        $crawler = $this->client->request('GET', '/task/new');
+        $this->assertEquals(302, $this->client->getResponse()->getStatusCode());
 
-        $this->repository->add($fixture, true);
+        $form = $crawler->selectButton('Ajouter')->form();
+        $form['task[title]'] = 'letitre';
+        $form['task[content]'] = 'lecontenue';
+        $this->client->submit($form);
 
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
-        self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('Task');
+        $crawler = $this->client->followRedirect();
 
-        // Use assertions to check that the properties are properly displayed.
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(1, $crawler->filter('div.alert-success')->count());
     }
 
-    public function testEdit(): void
+    public function testModifyAction()
     {
-        $this->markTestIncomplete();
-        $fixture = new Task();
-        $fixture->setCreatedAt('My Title');
-        $fixture->setTitle('My Title');
-        $fixture->setContent('My Title');
-        $fixture->setIsDone('My Title');
+        $this->loginUser();
 
-        $this->repository->add($fixture, true);
+        $crawler = $this->client->request('GET', '/task/63/edit');
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('GET', sprintf('%s%s/edit', $this->path, $fixture->getId()));
+        $form = $crawler->selectButton('Modifier')->form();
+        $form['task[title]'] = 'letitre';
+        $form['task[content]'] = 'lecontenue';
+        $this->client->submit($form);
 
-        $this->client->submitForm('Update', [
-            'task[createdAt]' => 'Something New',
-            'task[title]' => 'Something New',
-            'task[content]' => 'Something New',
-            'task[isDone]' => 'Something New',
-        ]);
+        $this->assertEquals(303, $this->client->getResponse()->getStatusCode());
 
-        self::assertResponseRedirects('/task/');
+        $crawler = $this->client->followRedirect();
 
-        $fixture = $this->repository->findAll();
-
-        self::assertSame('Something New', $fixture[0]->getCreatedAt());
-        self::assertSame('Something New', $fixture[0]->getTitle());
-        self::assertSame('Something New', $fixture[0]->getContent());
-        self::assertSame('Something New', $fixture[0]->getIsDone());
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(1, $crawler->filter('div.alert-success')->count());
     }
 
-    public function testRemove(): void
+    public function testToggleTaskAction(): void
     {
-        $this->markTestIncomplete();
+        $this->loginUser();
 
-        $originalNumObjectsInRepository = count($this->repository->findAll());
+        $this->client->request('GET', '/task/65/toggle');
 
-        $fixture = new Task();
-        $fixture->setCreatedAt('My Title');
-        $fixture->setTitle('My Title');
-        $fixture->setContent('My Title');
-        $fixture->setIsDone('My Title');
+        $this->assertEquals(302, $this->client->getResponse()->getStatusCode());
 
-        $this->repository->add($fixture, true);
+        $crawler = $this->client->followRedirect();
 
-        self::assertSame($originalNumObjectsInRepository + 1, count($this->repository->findAll()));
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(1, $crawler->filter('div.alert-success')->count());
+    }
 
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
-        $this->client->submitForm('Delete');
+    public function testDeleteAction()
+    {
+        $this->loginUser();
 
-        self::assertSame($originalNumObjectsInRepository, count($this->repository->findAll()));
-        self::assertResponseRedirects('/task/');
+        $this->client->request('GET', '/task/delete/63');
+
+        $this->assertEquals(303, $this->client->getResponse()->getStatusCode());
+
+        $crawler = $this->client->followRedirect();
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $this->assertEquals(0, $crawler->filter('div.alert-success')->count());
     }
 }
